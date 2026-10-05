@@ -1,0 +1,33 @@
+{
+  "name": "actionpilot",
+  "version": "1.0.0",
+  "description": "The Next-Best-Action Engine for Alexa+ | Amazon Developer Hackathon 2026",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "agent",
+    "infrastructure/cdk"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:mcp\" \"npm run dev:web\"",
+    "dev:mcp": "npm --workspace=apps/mcp-server run dev",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "build": "npm --workspace=apps/mcp-server run build && npm --workspace=apps/web run build",
+    "test": "vitest run",
+    "cdk:synth": "npm --workspace=infrastructure/cdk run synth"
+  },
+  "keywords": [
+    "alexa-plus",
+    "model-context-protocol",
+    "mcp",
+    "amazon-bedrock",
+    "agentcore",
+    "aws",
+    "hackathon-2026"
+  ],
+  "author": "ActionPilot Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

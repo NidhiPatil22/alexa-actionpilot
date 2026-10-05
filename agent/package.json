@@ -1,0 +1,16 @@
+{
+  "name": "@actionpilot/agent",
+  "version": "1.0.0",
+  "description": "Strands & Amazon Bedrock Agent Orchestrator for Alexa+",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.750.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3"
+  }
+}
