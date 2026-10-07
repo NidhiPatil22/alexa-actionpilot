@@ -28,11 +28,12 @@ export class AlexaOrchestrator {
       lower.includes('recommend')
     ) {
       reasoningChain.push('Goal: User is seeking the single highest-value action right now.');
+      const context = await dataStore.getUserContext();
       reasoningChain.push('Step 1: Querying active tasks from storage via get_tasks...');
-      const tasksResult = await executeTool('get_tasks', { status: 'todo' });
+      const tasksResult = await executeTool('get_tasks', { userId: context.userId, status: 'todo' });
 
       reasoningChain.push('Step 2: Retrieving today & tomorrow calendar commitments via get_calendar...');
-      await executeTool('get_calendar');
+      await executeTool('get_calendar', { userId: context.userId });
 
       reasoningChain.push('Step 3: Calculating capacity and pressure index via analyze_workload...');
       await executeTool('analyze_workload', { date: 'today' });
@@ -41,10 +42,17 @@ export class AlexaOrchestrator {
       await executeTool('prioritize_tasks');
 
       reasoningChain.push('Step 5: Locating optimal uninterrupted focus window via find_free_slots...');
-      await executeTool('find_free_slots', { date: 'today', minDurationMinutes: 30 });
+      await executeTool('find_free_slots', {
+        userId: context.userId,
+        date: 'today',
+        minDurationMinutes: 30
+      });
 
       reasoningChain.push('Step 6: Synthesizing Next-Best-Action with explainable rationale via get_next_action...');
-      const nextAction: NextBestAction = await executeTool('get_next_action');
+      const nextAction: NextBestAction = await executeTool('get_next_action', {
+        userId: context.userId,
+        availableMinutes: 90
+      });
 
       let speech = nextAction.explanationForAlexa;
 
@@ -174,7 +182,12 @@ export class AlexaOrchestrator {
       const workload = await executeTool('analyze_workload', { date: 'today' });
 
       reasoningChain.push('Step 2: Identifying remaining free capacity...');
-      const freeSlots = await executeTool('find_free_slots', { date: 'today' });
+      const scheduleContext = await dataStore.getUserContext();
+      const freeSlots = await executeTool('find_free_slots', {
+        userId: scheduleContext.userId,
+        date: 'today',
+        minDurationMinutes: 30
+      });
 
       const speech = `Today you have ${Math.round(workload.totalScheduledMinutes / 60)} hours scheduled in meetings and ${Math.round(workload.totalFreeMinutes / 60)} hours of free focus time across ${freeSlots.freeSlotCount} slots. Your overall stress index is ${workload.stressLevel}.`;
 

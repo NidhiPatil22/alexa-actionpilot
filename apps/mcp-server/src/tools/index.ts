@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { dataStore } from '../storage/index.js';
 import { findFreeSlots } from '../engine/freeSlots.js';
 import { rankTasks } from '../engine/priorityScorer.js';
@@ -5,6 +6,233 @@ import { analyzeWorkload } from '../engine/workloadAnalyzer.js';
 import { determineNextBestAction } from '../engine/nextBestAction.js';
 import { analyzeConsequences } from '../engine/consequenceEngine.js';
 import { Task, CalendarEvent } from '../types.js';
+
+const GetTasksArgsSchema = z.object({
+  userId: z.string().min(1).describe('Unique identifier for the user'),
+  status: z.enum(['todo', 'in_progress', 'completed', 'postponed']).optional(),
+  tag: z.string().optional()
+});
+
+const GetNextActionArgsSchema = z.object({
+  userId: z.string().min(1).describe('Unique identifier for the user'),
+  availableMinutes: z.number().finite().nonnegative().describe('Available free time slot in minutes')
+});
+
+const GetCalendarArgsSchema = z.object({
+  userId: z.string().min(1).describe('Unique identifier for the user'),
+  startDate: z.string().optional(),
+  endDate: z.string().optional()
+});
+
+const FindFreeSlotsArgsSchema = z.object({
+  userId: z.string().min(1).describe('Unique identifier for the user'),
+  minDurationMinutes: z.number().finite().nonnegative().describe('Minimum uninterrupted focus block in minutes'),
+  date: z.string().optional()
+});
+
+type GetTasksPayload = {
+  id: string;
+  title: string;
+  deadline: string;
+  estimated_minutes: number;
+  priority: number;
+  status: string;
+};
+
+function mockTasksForUser(userId: string): GetTasksPayload[] {
+  return [
+    {
+      id: `task-${userId}-001`,
+      title: 'Complete ActionPilot MCP get_tasks integration',
+      deadline: '2026-10-08T17:00:00.000Z',
+      estimated_minutes: 90,
+      priority: 5,
+      status: 'in_progress'
+    },
+    {
+      id: `task-${userId}-002`,
+      title: 'Review pending assignment for Alexa+ demo',
+      deadline: '2026-10-09T23:59:00.000Z',
+      estimated_minutes: 45,
+      priority: 4,
+      status: 'todo'
+    },
+    {
+      id: `task-${userId}-003`,
+      title: 'Prepare deadline briefing for next-best-action',
+      deadline: '2026-10-10T12:00:00.000Z',
+      estimated_minutes: 30,
+      priority: 3,
+      status: 'todo'
+    }
+  ];
+}
+
+function invalidArguments(message: string, error: z.ZodError) {
+  return {
+    error: true,
+    isError: true,
+    code: 'INVALID_ARGUMENTS',
+    message,
+    issues: error.issues.map((issue) => ({
+      path: issue.path.join('.'),
+      message: issue.message
+    }))
+  };
+}
+
+function toActionTask(task: Task): GetTasksPayload {
+  return {
+    id: task.id,
+    title: task.title,
+    deadline: task.deadline,
+    estimated_minutes: task.estimatedDuration,
+    priority: task.priority,
+    status: task.status
+  };
+}
+
+async function loadTasksForUser(userId: string): Promise<GetTasksPayload[]> {
+  const stored = await dataStore.getTasks();
+  const mapped = stored.map(toActionTask);
+  return mapped.length > 0 ? mapped : mockTasksForUser(userId);
+}
+
+type PriorityBand = 'HIGH' | 'MEDIUM' | 'LOW';
+
+function priorityBand(priority: number | string): PriorityBand {
+  if (typeof priority === 'string') {
+    const normalized = priority.toUpperCase();
+    if (normalized === 'HIGH' || normalized === 'MEDIUM' || normalized === 'LOW') {
+      return normalized;
+    }
+    const numeric = Number(priority);
+    if (!Number.isNaN(numeric)) {
+      return priorityBand(numeric);
+    }
+    return 'LOW';
+  }
+  if (priority >= 4) return 'HIGH';
+  if (priority >= 3) return 'MEDIUM';
+  return 'LOW';
+}
+
+function bandRank(band: PriorityBand): number {
+  if (band === 'HIGH') return 3;
+  if (band === 'MEDIUM') return 2;
+  return 1;
+}
+
+function scoreNextActionTask(task: GetTasksPayload, now: Date): number {
+  const deadlineMs = new Date(task.deadline).getTime();
+  const hoursUntilDeadline = (deadlineMs - now.getTime()) / 3_600_000;
+  const deadlineProximity = hoursUntilDeadline <= 0
+    ? 1000
+    : 1000 / Math.max(hoursUntilDeadline, 0.25);
+  return bandRank(priorityBand(task.priority)) * 10_000 + deadlineProximity;
+}
+
+function formatDeadline(deadline: string): string {
+  const date = new Date(deadline);
+  if (Number.isNaN(date.getTime())) return deadline;
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
+function mockCalendarForUser(userId: string, dateStr: string): CalendarEvent[] {
+  return [
+    {
+      id: `cal-${userId}-lecture`,
+      title: 'Distributed Systems Lecture',
+      start: `${dateStr}T09:00:00.000Z`,
+      end: `${dateStr}T10:30:00.000Z`,
+      isFixed: true,
+      type: 'meeting',
+      description: 'CS-504 morning lecture block'
+    },
+    {
+      id: `cal-${userId}-standup`,
+      title: 'Team standup',
+      start: `${dateStr}T10:45:00.000Z`,
+      end: `${dateStr}T11:15:00.000Z`,
+      isFixed: true,
+      type: 'meeting',
+      description: 'Daily status meeting'
+    },
+    {
+      id: `cal-${userId}-lunch`,
+      title: 'Lunch',
+      start: `${dateStr}T12:00:00.000Z`,
+      end: `${dateStr}T13:00:00.000Z`,
+      isFixed: true,
+      type: 'personal',
+      description: 'Lunch gap'
+    },
+    {
+      id: `cal-${userId}-review`,
+      title: 'Architecture review',
+      start: `${dateStr}T15:00:00.000Z`,
+      end: `${dateStr}T16:00:00.000Z`,
+      isFixed: false,
+      type: 'meeting',
+      description: 'Afternoon design review'
+    }
+  ];
+}
+
+async function loadCalendarForUser(
+  userId: string,
+  startDate?: string,
+  endDate?: string
+): Promise<CalendarEvent[]> {
+  const stored = await dataStore.getEvents(startDate, endDate);
+  if (stored.length > 0) {
+    return stored;
+  }
+  const dateStr = (startDate || new Date().toISOString()).split('T')[0];
+  return mockCalendarForUser(userId, dateStr);
+}
+
+function resolveTargetDate(date?: string): string {
+  const now = new Date();
+  if (!date || date === 'today') {
+    return now.toISOString().split('T')[0];
+  }
+  if (date === 'tomorrow') {
+    const tmrw = new Date(now);
+    tmrw.setUTCDate(tmrw.getUTCDate() + 1);
+    return tmrw.toISOString().split('T')[0];
+  }
+  return date;
+}
+
+function gapsBetweenEvents(
+  events: CalendarEvent[],
+  minDurationMinutes: number
+): Array<{ start: string; end: string; durationMinutes: number }> {
+  const sorted = [...events]
+    .filter((event) => !Number.isNaN(new Date(event.start).getTime()) && !Number.isNaN(new Date(event.end).getTime()))
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+  const gaps: Array<{ start: string; end: string; durationMinutes: number }> = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const gapStart = new Date(sorted[i].end).getTime();
+    const gapEnd = new Date(sorted[i + 1].start).getTime();
+    const durationMinutes = Math.floor((gapEnd - gapStart) / (60 * 1000));
+    if (durationMinutes >= minDurationMinutes) {
+      gaps.push({
+        start: new Date(gapStart).toISOString(),
+        end: new Date(gapEnd).toISOString(),
+        durationMinutes
+      });
+    }
+  }
+  return gaps;
+}
 
 export interface MCPToolDefinition {
   name: string;
@@ -67,17 +295,40 @@ export const tools: MCPToolDefinition[] = [
   // 2. get_tasks
   {
     name: 'get_tasks',
-    description: 'Retrieve user tasks, optionally filtered by status (todo, completed, in_progress) or tag.',
+    description: 'Fetches active tasks, pending assignments, and deadlines for ActionPilot',
     inputSchema: {
       type: 'object',
       properties: {
+        userId: { type: 'string', description: 'Unique identifier for the user' },
         status: { type: 'string', enum: ['todo', 'in_progress', 'completed', 'postponed'] },
         tag: { type: 'string' }
-      }
+      },
+      required: ['userId']
     },
     handler: async (args) => {
-      const tasks = await dataStore.getTasks({ status: args?.status, tag: args?.tag });
+      const parsed = GetTasksArgsSchema.safeParse(args ?? {});
+      if (!parsed.success) {
+        return invalidArguments(
+          'get_tasks requires a valid userId string.',
+          parsed.error
+        );
+      }
+
+      const { userId, status, tag } = parsed.data;
+      const stored = await dataStore.getTasks({ status, tag });
+      const mappedStored: GetTasksPayload[] = stored.map((task) => ({
+        id: task.id,
+        title: task.title,
+        deadline: task.deadline,
+        estimated_minutes: task.estimatedDuration,
+        priority: task.priority,
+        status: task.status
+      }));
+
+      const tasks = mappedStored.length > 0 ? mappedStored : mockTasksForUser(userId);
+
       return {
+        userId,
         count: tasks.length,
         tasks
       };
@@ -151,17 +402,29 @@ export const tools: MCPToolDefinition[] = [
   // 5. get_calendar
   {
     name: 'get_calendar',
-    description: 'Retrieve calendar events and focus blocks for a specific time range.',
+    description: 'Fetches scheduled calendar events and time blocks for the specified user',
     inputSchema: {
       type: 'object',
       properties: {
+        userId: { type: 'string', description: 'Unique identifier for the user' },
         startDate: { type: 'string', description: 'Start date ISO string' },
         endDate: { type: 'string', description: 'End date ISO string' }
-      }
+      },
+      required: ['userId']
     },
     handler: async (args) => {
-      const events = await dataStore.getEvents(args?.startDate, args?.endDate);
+      const parsed = GetCalendarArgsSchema.safeParse(args ?? {});
+      if (!parsed.success) {
+        return invalidArguments(
+          'get_calendar requires a valid userId string.',
+          parsed.error
+        );
+      }
+
+      const { userId, startDate, endDate } = parsed.data;
+      const events = await loadCalendarForUser(userId, startDate, endDate);
       return {
+        userId,
         count: events.length,
         events
       };
@@ -171,31 +434,50 @@ export const tools: MCPToolDefinition[] = [
   // 6. find_free_slots
   {
     name: 'find_free_slots',
-    description: 'Deterministically calculate free, uninterrupted time slots for a given day.',
+    description: 'Analyzes the calendar to find uninterrupted free time blocks for focus sessions',
     inputSchema: {
       type: 'object',
       properties: {
-        date: { type: 'string', description: 'Date in YYYY-MM-DD or "today" / "tomorrow"' },
-        minDurationMinutes: { type: 'number', description: 'Minimum duration in minutes (default 30)' }
-      }
+        userId: { type: 'string', description: 'Unique identifier for the user' },
+        minDurationMinutes: { type: 'number', description: 'Minimum uninterrupted focus block in minutes' },
+        date: { type: 'string', description: 'Date in YYYY-MM-DD or "today" / "tomorrow"' }
+      },
+      required: ['userId', 'minDurationMinutes']
     },
     handler: async (args) => {
-      const context = await dataStore.getUserContext();
-      const events = await dataStore.getEvents();
-      let targetDate = args?.date || 'today';
-      const now = new Date();
-
-      if (targetDate === 'today') {
-        targetDate = now.toISOString().split('T')[0];
-      } else if (targetDate === 'tomorrow') {
-        const tmrw = new Date(now);
-        tmrw.setUTCDate(tmrw.getUTCDate() + 1);
-        targetDate = tmrw.toISOString().split('T')[0];
+      const parsed = FindFreeSlotsArgsSchema.safeParse(args ?? {});
+      if (!parsed.success) {
+        return invalidArguments(
+          'find_free_slots requires userId (string) and minDurationMinutes (number).',
+          parsed.error
+        );
       }
 
-      const slots = findFreeSlots(events, targetDate, context, args?.minDurationMinutes || 30);
+      const { userId, minDurationMinutes, date } = parsed.data;
+      const targetDate = resolveTargetDate(date);
+      const events = await loadCalendarForUser(userId);
+      const context = await dataStore.getUserContext();
+      const workdaySlots = findFreeSlots(events, targetDate, context, minDurationMinutes, 0);
+      const interstitialGaps = gapsBetweenEvents(
+        events.filter((event) => event.start.startsWith(targetDate) || event.end.startsWith(targetDate)),
+        minDurationMinutes
+      );
+
+      const slotsByStart = new Map<string, { start: string; end: string; durationMinutes: number; energyFit?: string }>();
+      for (const slot of [...workdaySlots, ...interstitialGaps]) {
+        if (slot.durationMinutes >= minDurationMinutes) {
+          slotsByStart.set(slot.start, slot);
+        }
+      }
+
+      const slots = [...slotsByStart.values()].sort(
+        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+      );
+
       return {
+        userId,
         date: targetDate,
+        minDurationMinutes,
         freeSlotCount: slots.length,
         slots
       };
@@ -252,18 +534,65 @@ export const tools: MCPToolDefinition[] = [
   // 9. get_next_action (Flagship Decision Engine)
   {
     name: 'get_next_action',
-    description: 'Evaluates user goals, tasks, deadlines, and schedule to recommend the single Next Best Action with full explainability.',
+    description: 'Evaluates pending tasks, calendar windows, and urgency to return the single highest priority action recommendation for ActionPilot',
     inputSchema: {
       type: 'object',
-      properties: {}
+      properties: {
+        userId: { type: 'string', description: 'Unique identifier for the user' },
+        availableMinutes: { type: 'number', description: 'Available free time slot in minutes' }
+      },
+      required: ['userId', 'availableMinutes']
     },
-    handler: async () => {
-      const tasks = await dataStore.getTasks();
+    handler: async (args) => {
+      const parsed = GetNextActionArgsSchema.safeParse(args ?? {});
+      if (!parsed.success) {
+        return invalidArguments(
+          'get_next_action requires userId (string) and availableMinutes (number).',
+          parsed.error
+        );
+      }
+
+      const { userId, availableMinutes } = parsed.data;
+      const now = new Date();
+      const tasks = await loadTasksForUser(userId);
+      const eligible = tasks
+        .filter((task) => task.status !== 'completed' && task.estimated_minutes <= availableMinutes)
+        .sort((a, b) => scoreNextActionTask(b, now) - scoreNextActionTask(a, now));
+
+      if (eligible.length === 0) {
+        return {
+          userId,
+          availableMinutes,
+          recommendedTask: null,
+          reasoning: `No pending task fits in ${availableMinutes} minutes. Take a short break, or create a smaller task that can be finished in this window.`,
+          estimatedMinutes: 0,
+          suggestion: 'break_or_smaller_task'
+        };
+      }
+
+      const top = eligible[0];
+      const band = priorityBand(top.priority);
+      const stored = await dataStore.getTask(top.id);
+      const recommendedTask = stored ?? top;
+      const estimatedMinutes = top.estimated_minutes;
+      const reasoning = `Recommend "${top.title}" because it is ${band} priority, due ${formatDeadline(top.deadline)}, and its ${estimatedMinutes}-minute estimate fits the ${availableMinutes}-minute window better than other pending work.`;
+
       const events = await dataStore.getEvents();
       const context = await dataStore.getUserContext();
-      const now = new Date();
-      const nextAction = determineNextBestAction(tasks, events, context, now);
-      return nextAction;
+      const engineAction = determineNextBestAction(await dataStore.getTasks(), events, context, now);
+
+      return {
+        userId,
+        availableMinutes,
+        recommendedTask,
+        reasoning,
+        estimatedMinutes,
+        confidenceScore: engineAction.confidenceScore,
+        recommendedSlot: engineAction.recommendedSlot,
+        alternativeTasks: engineAction.alternativeTasks,
+        factors: engineAction.factors,
+        explanationForAlexa: reasoning
+      };
     }
   },
 

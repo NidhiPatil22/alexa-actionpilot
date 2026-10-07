@@ -120,28 +120,57 @@ export function createMCPRouter(): Router {
             });
           }
 
-          const executionResult = await tool.handler(toolArgs);
+          try {
+            const executionResult = await tool.handler(toolArgs);
+            const isError = Boolean(executionResult && executionResult.error);
 
-          // Broadcast tool completed event
-          broadcastMCPEvent('mcp_tool_executed', {
-            tool: toolName,
-            args: toolArgs,
-            result: executionResult,
-            timestamp: new Date().toISOString()
-          });
+            // Broadcast tool completed event
+            broadcastMCPEvent('mcp_tool_executed', {
+              tool: toolName,
+              args: toolArgs,
+              result: executionResult,
+              timestamp: new Date().toISOString()
+            });
 
-          return res.json({
-            jsonrpc: '2.0',
-            id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(executionResult, null, 2)
-                }
-              ]
-            }
-          });
+            return res.json({
+              jsonrpc: '2.0',
+              id,
+              result: {
+                isError,
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify(executionResult, null, 2)
+                  }
+                ]
+              }
+            });
+          } catch (toolErr: any) {
+            const structured = {
+              error: true,
+              code: 'TOOL_EXECUTION_FAILED',
+              message: toolErr?.message || `Tool "${toolName}" failed.`
+            };
+            broadcastMCPEvent('mcp_tool_error', {
+              tool: toolName,
+              args: toolArgs,
+              error: structured,
+              timestamp: new Date().toISOString()
+            });
+            return res.json({
+              jsonrpc: '2.0',
+              id,
+              result: {
+                isError: true,
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify(structured, null, 2)
+                  }
+                ]
+              }
+            });
+          }
         }
 
         default:

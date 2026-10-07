@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "actionpilot": {
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
