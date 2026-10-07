@@ -78,8 +78,7 @@ export function createMCPRouter(): Router {
             protocolVersion: '2025-11-25',
             capabilities: {
               tools: { listChanged: true },
-              logging: {},
-              experimental: { streamableHttp: true }
+              logging: {}
             },
             serverInfo: {
               name: 'actionpilot-mcp-server',

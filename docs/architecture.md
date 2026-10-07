@@ -81,7 +81,7 @@ ActionPilot exposes its intelligence through the standard **Model Context Protoc
 - **Transport**: Streamable HTTP (`/mcp` endpoint) with Server-Sent Events (`/sse`).
 - **Remote MCP Server**: Deployed on AWS ECS Fargate behind an Application Load Balancer with public HTTPS.
 - **Protocol Handlers**:
-  - `initialize`: Advertises MCP protocol version `2025-11-25`, server capabilities (`tools`, `logging`, `experimental.streamableHttp`), and metadata.
+  - `initialize`: Advertises MCP protocol version `2025-11-25`, server capabilities (`tools`, `logging`), and metadata. Streamable HTTP is the transport, not a server capability.
   - `tools/list`: Dynamic discovery of all 13 registered tools with JSON-Schema validation.
   - `tools/call`: Executes deterministic scheduling, consequence analysis, or calendar operations and returns structured JSON output.
   - `sse`: Real-time bidirectional event streaming for live execution waterfalls.

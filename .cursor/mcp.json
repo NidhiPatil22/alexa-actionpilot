@@ -1,7 +1,16 @@
 {
+<<<<<<< HEAD
   "mcpServers": {
     "actionpilot": {
       "url": "http://localhost:3001/mcp"
     }
   }
 }
+=======
+    "mcpServers": {
+      "actionpilot": {
+        "url": "http://localhost:3001/mcp"
+      }
+    }
+  }
+>>>>>>> 7e39114b259bb730b1c1254b63be8430bd160121
