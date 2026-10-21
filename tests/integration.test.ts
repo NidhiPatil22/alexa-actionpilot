@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { alexaOrchestrator } from './apps/mcp-server/src/agent/alexaOrchestrator.js';
-import { memoryStore } from './apps/mcp-server/src/storage/memoryStore.js';
+import { alexaOrchestrator } from '../apps/mcp-server/src/agent/alexaOrchestrator.js';
+import { memoryStore } from '../apps/mcp-server/src/storage/memoryStore.js';
 
 describe('ActionPilot End-to-End Alexa+ Agent Workflow', () => {
   beforeEach(() => {
@@ -60,4 +60,25 @@ describe('ActionPilot End-to-End Alexa+ Agent Workflow', () => {
     const toolNames = response.toolsExecuted.map(t => t.tool);
     expect(toolNames).toContain('create_focus_block');
   });
+
+  it('Scenario 5: User asks "Alexa, plan my day and optimize my focus schedule"', async () => {
+    const response = await alexaOrchestrator.handleAlexaQuery('Alexa, plan my day and optimize my focus schedule');
+
+    expect(response.intent).toBe('AUTONOMOUS_GOAL');
+    expect(response.speechResponse).toBeTruthy();
+    expect(response.reasoningChain.length).toBeGreaterThanOrEqual(6);
+
+    const toolNames = response.toolsExecuted.map(t => t.tool);
+    expect(toolNames).toContain('get_tasks');
+    expect(toolNames).toContain('get_calendar');
+    expect(toolNames).toContain('analyze_workload');
+    expect(toolNames).toContain('prioritize_tasks');
+    expect(toolNames).toContain('find_free_slots');
+    expect(toolNames).toContain('create_focus_block');
+
+    expect(response.actionTaken.type).toBe('autonomous_plan');
+    expect(response.actionTaken.data.topTask).toBeDefined();
+    expect(response.actionTaken.data.bookedBlock).toBeDefined();
+  });
 });
+

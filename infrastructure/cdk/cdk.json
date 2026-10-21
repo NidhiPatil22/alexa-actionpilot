@@ -1,5 +1,5 @@
 {
-  "app": "node bin/actionpilot-cdk.js",
+  "app": "npx ts-node -T bin/actionpilot-cdk.ts",
   "watch": {
     "include": [
       "**"

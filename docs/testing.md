@@ -55,7 +55,7 @@ npx vitest run
 
 ## Continuous Integration (GitHub Actions)
 
-Located in [`.github/workflows/ci.yml`](file:///c:/Users/Asus/Downloads/alexa/.github/workflows/ci.yml):
+Located in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml):
 - Runs on every push and pull request.
 - Installs dependencies across workspaces.
 - Executes `npm test`.

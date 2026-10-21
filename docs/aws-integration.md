@@ -16,7 +16,7 @@ Amazon Bedrock serves as the cognitive reasoning engine for ActionPilot. While d
 - **Context Synthesis**: Grounding user goals against situational calendar state.
 
 ### Code Implementation
-Located in [`apps/mcp-server/src/agent/bedrockClient.ts`](file:///c:/Users/Asus/Downloads/alexa/apps/mcp-server/src/agent/bedrockClient.ts):
+Located in [`apps/mcp-server/src/agent/bedrockClient.ts`](../apps/mcp-server/src/agent/bedrockClient.ts):
 ```typescript
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
@@ -68,7 +68,7 @@ DynamoDB provides serverless, single-digit millisecond latency persistence for a
 | `ActionPilot-UserContext` | `userId` (String) | — | — | User habits, work hours, and goals |
 
 ### Code Implementation
-Located in [`apps/mcp-server/src/storage/dynamoStore.ts`](file:///c:/Users/Asus/Downloads/alexa/apps/mcp-server/src/storage/dynamoStore.ts):
+Located in [`apps/mcp-server/src/storage/dynamoStore.ts`](../apps/mcp-server/src/storage/dynamoStore.ts):
 - Utilizes `@aws-sdk/lib-dynamodb` `DynamoDBDocumentClient`.
 - Features resilient zero-config local fallback when running in offline/demo mode so judges can run and inspect the app immediately without provisioning AWS resources.
 
@@ -99,7 +99,7 @@ The production Remote MCP Server runs on serverless containers via AWS ECS Farga
 ## 6. AWS CDK Infrastructure as Code
 
 All AWS infrastructure is codified in TypeScript using AWS CDK v2:
-- Located in [`infrastructure/cdk/lib/actionpilot-stack.ts`](file:///c:/Users/Asus/Downloads/alexa/infrastructure/cdk/lib/actionpilot-stack.ts)
+- Located in [`infrastructure/cdk/lib/actionpilot-stack.ts`](../infrastructure/cdk/lib/actionpilot-stack.ts)
 - Reproducible deployment:
   ```bash
   cd infrastructure/cdk

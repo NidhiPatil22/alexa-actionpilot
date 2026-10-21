@@ -158,7 +158,7 @@ export interface AlexaAgentResponse {
     output: any;
   }>;
   actionTaken?: {
-    type: 'recommendation' | 'scheduled_block' | 'rescheduled' | 'consequence_analysis' | 'status';
+    type: 'recommendation' | 'scheduled_block' | 'rescheduled' | 'consequence_analysis' | 'status' | 'autonomous_plan';
     data: any;
   };
   nextBestAction?: NextBestAction;

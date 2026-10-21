@@ -204,6 +204,83 @@ export class AlexaOrchestrator {
       };
     }
 
+    // 5. Autonomous Multi-Step Planning & Goal Orchestration Intent
+    if (
+      lower.includes('plan my day') ||
+      lower.includes('optimize') ||
+      lower.includes('organize my') ||
+      lower.includes('protect focus') ||
+      lower.includes('autonomous') ||
+      lower.includes('goal:') ||
+      lower.startsWith('goal')
+    ) {
+      reasoningChain.push('Goal: Autonomous multi-step schedule optimization triggered.');
+      const userContext = await dataStore.getUserContext();
+
+      reasoningChain.push('Step 1: Retrieving active task queue & calendar state...');
+      const tasksRes = await executeTool('get_tasks', { userId: userContext.userId, status: 'todo' });
+      await executeTool('get_calendar', { userId: userContext.userId });
+
+      reasoningChain.push('Step 2: Assessing cognitive workload & stress index...');
+      const initialWorkload = await executeTool('analyze_workload', { date: 'today' });
+
+      reasoningChain.push('Step 3: Calculating deterministic multi-factor priority ranking...');
+      const rankedRes = await executeTool('prioritize_tasks');
+
+      reasoningChain.push('Step 4: Scanning for continuous free focus slots matching energy curves...');
+      const freeSlotsRes = await executeTool('find_free_slots', {
+        userId: userContext.userId,
+        date: 'today',
+        minDurationMinutes: 30
+      });
+
+      reasoningChain.push('Step 5: Synthesizing autonomous schedule allocations...');
+      const topRanked = rankedRes.rankedTasks?.[0];
+      const allTasks = await dataStore.getTasks();
+      const topTask = topRanked ? allTasks.find(t => t.id === topRanked.taskId) : null;
+      const duration = topTask?.estimatedDuration || 45;
+      const title = topTask?.title || topRanked?.taskTitle || 'Priority Focus';
+
+      let bookedBlock = null;
+      if (topTask && freeSlotsRes.slots && freeSlotsRes.slots.length > 0) {
+        const slot = freeSlotsRes.slots[0];
+        const blockEnd = new Date(new Date(slot.start).getTime() + duration * 60000).toISOString();
+        bookedBlock = await executeTool('create_focus_block', {
+          taskId: topTask.id,
+          title: `Focus: ${title}`,
+          start: slot.start,
+          end: blockEnd
+        });
+        reasoningChain.push(`Step 6: Autonomously reserved ${duration}m focus block for "${title}".`);
+      }
+
+      let speech = bookedBlock
+        ? `I analyzed your ${tasksRes.count} deliverables and today's calendar. I've autonomously booked a ${duration}-minute focus block for your highest priority task, "${title}", in your next open window. Your schedule is now optimized.`
+        : `I evaluated your ${tasksRes.count} deliverables against today's calendar. Your top priority is "${title}", and you have ${freeSlotsRes.freeSlotCount} free focus slots remaining today.`;
+
+      const bedrockSpeech = await bedrockService.invokeReasoning(query, JSON.stringify({ topTask, bookedBlock, initialWorkload }));
+      if (bedrockSpeech && bedrockSpeech.trim().length > 0) {
+        speech = bedrockSpeech.trim();
+      }
+
+      return {
+        query,
+        intent: 'AUTONOMOUS_GOAL',
+        speechResponse: speech,
+        reasoningChain,
+        toolsExecuted,
+        actionTaken: {
+          type: 'autonomous_plan',
+          data: {
+            topTask,
+            bookedBlock,
+            freeSlotCount: freeSlotsRes.freeSlotCount,
+            initialStressLevel: initialWorkload.stressLevel
+          }
+        }
+      };
+    }
+
     // Default intent fallback
     reasoningChain.push('Evaluating conversational request with ActionPilot situational memory...');
     const context = await executeTool('get_user_context');

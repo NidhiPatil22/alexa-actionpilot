@@ -170,4 +170,43 @@ describe('ActionPilot 13 MCP Tools', () => {
     expect(report.stressLevel).toBeDefined();
     expect(report.deadlineDistribution).toBeDefined();
   });
+
+  it('executes update_task and modifies task attributes', async () => {
+    const updateTool = getToolByName('update_task')!;
+    const res = await updateTool.handler({
+      id: 'task-bedrock-01',
+      title: 'Updated Bedrock Title',
+      priority: 4,
+      estimatedDuration: 75
+    });
+    expect(res.success).toBe(true);
+    expect(res.task.title).toBe('Updated Bedrock Title');
+    expect(res.task.priority).toBe(4);
+    expect(res.task.estimatedDuration).toBe(75);
+  });
+
+  it('executes complete_task and sets status to completed', async () => {
+    const completeTool = getToolByName('complete_task')!;
+    const res = await completeTool.handler({
+      id: 'task-demo-slides'
+    });
+    expect(res.success).toBe(true);
+    expect(res.task.status).toBe('completed');
+  });
+
+  it('executes save_user_preference and updates contextual memory', async () => {
+    const savePrefTool = getToolByName('save_user_preference')!;
+    const res = await savePrefTool.handler({
+      key: 'preferMorningDeepWork',
+      value: false
+    });
+    expect(res.success).toBe(true);
+    expect(res.key).toBe('preferMorningDeepWork');
+    expect(res.value).toBe(false);
+
+    const getContextTool = getToolByName('get_user_context')!;
+    const ctx = await getContextTool.handler();
+    expect(ctx.learnedPreferences.preferMorningDeepWork).toBe(false);
+  });
 });
+

@@ -32,29 +32,70 @@ export function broadcastMCPEvent(eventType: string, data: any) {
   }
 }
 
+function isAuthorized(req: Request): boolean {
+  const apiKey = process.env.MCP_API_KEY;
+  if (!apiKey) return true; // Zero-config / local demo mode
+  const authHeader = req.headers['authorization'];
+  const xApiKey = req.headers['x-api-key'];
+  return (authHeader === `Bearer ${apiKey}`) || (xApiKey === apiKey);
+}
+
 export function createMCPRouter(): Router {
   const router = Router();
 
-  // SSE stream endpoint (Streamable HTTP / SSE transport)
-  router.get('/sse', (req: Request, res: Response) => {
+  const handleSseConnection = (req: Request, res: Response) => {
+    if (!isAuthorized(req)) {
+      res.status(401).json({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32000, message: 'Unauthorized: Invalid or missing MCP API key' }
+      });
+      return;
+    }
+
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    const sessionId = (req.headers['mcp-session-id'] as string) || `session-${Date.now()}`;
+    res.setHeader('Mcp-Session-Id', sessionId);
     res.flushHeaders?.();
 
     activeSseClients.add(res);
 
-    // Initial connected event
-    res.write(`event: endpoint\ndata: ${JSON.stringify({ endpoint: '/mcp', version: '2025-11-25' })}\n\n`);
+    // Initial connected event conforming to MCP 2025-11-25
+    res.write(`event: endpoint\ndata: ${JSON.stringify({ endpoint: '/mcp', version: '2025-11-25', sessionId })}\n\n`);
+
+    // 15-second heartbeat ping to prevent AWS ALB / gateway timeouts
+    const pingInterval = setInterval(() => {
+      try {
+        res.write(`event: ping\ndata: ${JSON.stringify({ timestamp: new Date().toISOString() })}\n\n`);
+      } catch {
+        clearInterval(pingInterval);
+        activeSseClients.delete(res);
+      }
+    }, 15000);
 
     req.on('close', () => {
+      clearInterval(pingInterval);
       activeSseClients.delete(res);
     });
-  });
+  };
+
+  // MCP 2025-11-25 standard Streamable HTTP SSE channels
+  router.get('/mcp', handleSseConnection);
+  router.get('/sse', handleSseConnection);
 
   // Streamable HTTP JSON-RPC 2.0 endpoint conforming to MCP 2025-11-25
   router.post('/mcp', async (req: Request, res: Response): Promise<any> => {
+    if (!isAuthorized(req)) {
+      return res.status(401).json({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32000, message: 'Unauthorized: Invalid or missing MCP API key' }
+      });
+    }
+
     const body: MCPRequest = req.body;
 
     if (!body || body.jsonrpc !== '2.0' || !body.method) {

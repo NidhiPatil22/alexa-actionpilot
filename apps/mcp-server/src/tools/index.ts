@@ -698,6 +698,8 @@ export const tools: MCPToolDefinition[] = [
       const updated = await dataStore.updateUserPreference(args.key, args.value);
       return {
         success: true,
+        key: args.key,
+        value: args.value,
         learnedPreferences: updated.learnedPreferences,
         message: `Preference "${args.key}" saved.`
       };
