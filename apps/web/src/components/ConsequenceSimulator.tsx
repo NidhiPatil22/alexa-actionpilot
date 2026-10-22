@@ -39,71 +39,63 @@ export const ConsequenceSimulator: React.FC<ConsequenceSimulatorProps> = ({
     switch (severity) {
       case 'critical':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 border border-rose-500/40 text-rose-400">
-            <ShieldAlert className="w-3.5 h-3.5" /> CRITICAL CONFLICT
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 border border-rose-500/40 text-rose-300 shadow-sm">
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" /> CRITICAL CONFLICT
           </span>
         );
       case 'high':
       case 'medium':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-amber-400">
-            <AlertTriangle className="w-3.5 h-3.5" /> REQUIRING RESHUFFLE
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> REQUIRING RESHUFFLE
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-400">
-            <CheckCircle className="w-3.5 h-3.5" /> SAFE TO MOVE
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-sm">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> SAFE TO MOVE
           </span>
         );
     }
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-5 lg:p-6 border border-slate-800 shadow-glass mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 className="text-sm font-bold text-white tracking-wide uppercase flex items-center gap-2">
-            <GitBranch className="w-4 h-4 text-alexa-purple" />
-            Consequence-Aware Rescheduling Sandbox
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-alexa-violet/15 text-alexa-purple border border-alexa-violet/30">
-              What-If Simulator
-            </span>
-          </h2>
-          <p className="text-xs text-slate-400">
-            Simulate rescheduling actions to detect calendar collisions, deadline breaches, and domino effects.
-          </p>
-        </div>
+    <div className="rounded-3xl glass-panel p-6 sm:p-7 border border-purple-500/20 shadow-glass mb-8 backdrop-blur-2xl bg-obsidian-900/80">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="text-sm font-bold text-white tracking-wide uppercase flex items-center gap-2">
+          <GitBranch className="w-4 h-4 text-fuchsia-400" />
+          Schedule Sandbox
+        </h2>
       </div>
 
       {/* Simulation Controls Form */}
       <form onSubmit={handleRunSimulation} className="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-4">
         <div className="sm:col-span-5">
-          <label className="block text-xs font-mono text-slate-400 mb-1">Select Task to Reschedule</label>
+          <label className="block text-xs font-mono text-purple-300/80 mb-1">Task</label>
           <select
             value={selectedTaskId}
             onChange={(e) => setSelectedTaskId(e.target.value)}
-            className="w-full bg-obsidian-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-alexa-purple"
+            className="w-full bg-obsidian-950/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400"
           >
             {tasks.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title} ({t.estimatedDuration}m, due {new Date(t.deadline).toLocaleDateString([], { month: 'short', day: 'numeric' })})
+              <option key={t.id} value={t.id} className="bg-obsidian-950 text-white">
+                {t.title} ({t.estimatedDuration}m)
               </option>
             ))}
           </select>
         </div>
 
         <div className="sm:col-span-4">
-          <label className="block text-xs font-mono text-slate-400 mb-1">Proposed Target Time</label>
+          <label className="block text-xs font-mono text-purple-300/80 mb-1">Proposed Time</label>
           <select
             value={proposedTime}
             onChange={(e) => setProposedTime(e.target.value)}
-            className="w-full bg-obsidian-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-alexa-purple"
+            className="w-full bg-obsidian-950/90 border border-purple-500/25 rounded-2xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-fuchsia-400"
           >
-            <option value="tomorrow">Tomorrow (Auto-fit peak window)</option>
-            <option value="today">Today (Later slot)</option>
-            <option value="2026-10-07T14:00:00Z">Wednesday 2:00 PM</option>
-            <option value="2026-10-08T10:00:00Z">Thursday 10:00 AM</option>
+            <option value="tomorrow" className="bg-obsidian-950 text-white">Tomorrow</option>
+            <option value="today" className="bg-obsidian-950 text-white">Today (Later slot)</option>
+            <option value="2026-10-07T14:00:00Z" className="bg-obsidian-950 text-white">Wednesday 2:00 PM</option>
+            <option value="2026-10-08T10:00:00Z" className="bg-obsidian-950 text-white">Thursday 10:00 AM</option>
           </select>
         </div>
 
@@ -112,33 +104,27 @@ export const ConsequenceSimulator: React.FC<ConsequenceSimulatorProps> = ({
             type="submit"
             disabled={isLoading || !selectedTaskId}
             id="btn-simulate-consequences"
-            className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-obsidian-800 hover:bg-alexa-indigo border border-slate-700 hover:border-alexa-purple text-white transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+            className="w-full py-2 px-4 rounded-full text-xs font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 border border-fuchsia-400/30 text-white transition-all flex items-center justify-center gap-1.5 shadow-glow-purple active:scale-95 disabled:opacity-50"
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>Simulate Impact</span>
+            <Play className="w-3 h-3 fill-current" />
+            <span>Simulate</span>
           </button>
         </div>
       </form>
 
       {/* Simulation Result Presentation */}
       {latestAnalysis ? (
-        <div className="p-4 rounded-xl bg-obsidian-950/80 border border-slate-800 space-y-3.5">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-300">
-                Simulation for: <strong className="text-white">"{latestAnalysis.proposedChange.taskTitle}"</strong> → {latestAnalysis.proposedChange.proposedDateOrTime}
-              </span>
-            </div>
+        <div className="p-4 rounded-2xl bg-obsidian-950/80 border border-purple-500/25 space-y-3.5 shadow-glass">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-purple-500/20">
+            <span className="text-xs font-medium text-purple-200">
+              {latestAnalysis.proposedChange.taskTitle} → {latestAnalysis.proposedChange.proposedDateOrTime}
+            </span>
             <div>{getSeverityBadge(latestAnalysis.impactSeverity)}</div>
           </div>
 
           {/* Natural language summary */}
-          <div className="p-3 rounded-lg bg-obsidian-900 border border-slate-800 text-xs">
-            <div className="font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-alexa-cyan" />
-              Impact Summary:
-            </div>
-            <p className="text-slate-200 leading-relaxed font-sans">
+          <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/25 text-xs">
+            <p className="text-purple-100 leading-relaxed font-sans">
               {latestAnalysis.summary}
             </p>
           </div>
@@ -146,20 +132,20 @@ export const ConsequenceSimulator: React.FC<ConsequenceSimulatorProps> = ({
           {/* Conflicts list */}
           {latestAnalysis.conflicts.length > 0 && (
             <div className="space-y-1.5">
-              <div className="text-xs font-mono text-rose-400 flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                Detected Calendar Conflicts ({latestAnalysis.conflicts.length}):
+              <div className="text-xs font-mono text-rose-300 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                Conflicts ({latestAnalysis.conflicts.length}):
               </div>
               {latestAnalysis.conflicts.map((conf, idx) => (
                 <div
                   key={idx}
-                  className="p-2.5 rounded-lg bg-rose-950/20 border border-rose-900/50 text-xs text-rose-200 flex items-center justify-between"
+                  className="p-2.5 rounded-xl bg-rose-950/25 border border-rose-800/40 text-xs text-rose-200 flex items-center justify-between gap-2"
                 >
                   <div>
                     <strong>{conf.title}</strong>: {conf.message}
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-900/40 text-rose-300">
-                    {conf.isFixed ? 'Fixed Event' : 'Movable'}
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300">
+                    {conf.isFixed ? 'Fixed' : 'Movable'}
                   </span>
                 </div>
               ))}
@@ -169,19 +155,19 @@ export const ConsequenceSimulator: React.FC<ConsequenceSimulatorProps> = ({
           {/* Ripple effects */}
           {latestAnalysis.rippleEffects.length > 0 && (
             <div className="space-y-1.5">
-              <div className="text-xs font-mono text-amber-400 flex items-center gap-1">
-                <GitBranch className="w-3.5 h-3.5" />
-                Downstream Ripple Effects ({latestAnalysis.rippleEffects.length}):
+              <div className="text-xs font-mono text-amber-300 flex items-center gap-1.5">
+                <GitBranch className="w-3.5 h-3.5 text-amber-400" />
+                Ripple Effects ({latestAnalysis.rippleEffects.length}):
               </div>
               {latestAnalysis.rippleEffects.map((rip, idx) => (
                 <div
                   key={idx}
-                  className="p-2.5 rounded-lg bg-amber-950/20 border border-amber-900/50 text-xs text-amber-200"
+                  className="p-2.5 rounded-xl bg-amber-950/25 border border-amber-800/40 text-xs text-amber-200"
                 >
-                  <div className="font-semibold mb-0.5">Impact on: {rip.affectedTitle}</div>
-                  <div className="text-[11px] text-slate-300">{rip.cascadeReason}</div>
-                  <div className="text-[11px] text-emerald-400 mt-1">
-                    ↳ Suggested Remedy: {rip.suggestedRemedy}
+                  <div className="font-semibold mb-0.5">{rip.affectedTitle}</div>
+                  <div className="text-[11px] text-purple-200/80">{rip.cascadeReason}</div>
+                  <div className="text-[11px] text-emerald-300 mt-0.5">
+                    ↳ Remedy: {rip.suggestedRemedy}
                   </div>
                 </div>
               ))}
@@ -190,10 +176,10 @@ export const ConsequenceSimulator: React.FC<ConsequenceSimulatorProps> = ({
 
           {/* Mitigation Plan & 1-Click Action */}
           {latestAnalysis.alternativeSlots.length > 0 && (
-            <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="text-xs text-slate-300">
-                <span className="text-emerald-400 font-semibold block">Recommended Alternative Window:</span>
-                <span className="font-mono text-[11px] text-slate-400">
+            <div className="pt-2.5 border-t border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="text-xs text-purple-200">
+                <span className="text-emerald-400 font-semibold block">Alternative Slot:</span>
+                <span className="font-mono text-[11px] text-purple-300/80">
                   {latestAnalysis.alternativeSlots[0].label}
                 </span>
               </div>
@@ -206,19 +192,20 @@ export const ConsequenceSimulator: React.FC<ConsequenceSimulatorProps> = ({
                     end: latestAnalysis.alternativeSlots[0].end
                   })
                 }
-                className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                className="px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white transition-all flex items-center justify-center gap-1 shadow-sm active:scale-95"
               >
-                <span>Apply Safe Mitigation</span>
+                <span>Apply Remedy</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
           )}
         </div>
       ) : (
-        <div className="p-6 rounded-xl bg-obsidian-950/40 border border-slate-800/60 text-center text-xs text-slate-500 font-mono">
-          Click "Simulate Impact" or speak to Alexa to test schedule movements and preview cascading effects.
+        <div className="p-6 rounded-2xl bg-obsidian-950/50 border border-purple-500/15 text-center text-xs text-purple-300/60 font-mono">
+          Select a task to simulate schedule movements and detect conflicts.
         </div>
       )}
     </div>
   );
 };
+

@@ -22,74 +22,72 @@ export const McpStreamableInspector: React.FC<McpStreamableInspectorProps> = ({
   };
 
   return (
-    <div className="glass-panel rounded-2xl border border-slate-800 shadow-glass overflow-hidden mb-6">
+    <div className="rounded-3xl glass-panel border border-purple-500/20 shadow-glass overflow-hidden mb-8 backdrop-blur-2xl bg-obsidian-900/80">
       {/* Header toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-800/20 transition-colors"
+        className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-purple-900/10 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <Radio className="w-3.5 h-3.5 animate-pulse" />
+          <div className="w-7 h-7 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-fuchsia-400">
+            <Radio className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              MCP Protocol Inspector (Streamable HTTP 2025-11-25)
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+            <div className="text-xs font-bold text-white tracking-wide uppercase flex items-center gap-2">
+              Protocol Inspector
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
                 Connected
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Live JSON-RPC 2.0 stream & 13 Remote MCP Tool definitions.
-            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-slate-400">
-          <span className="text-xs font-mono">{registeredTools.length} Tools Ready</span>
-          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        <div className="flex items-center gap-2.5 text-purple-300">
+          <span className="text-xs font-mono bg-obsidian-950 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+            {registeredTools.length} Tools
+          </span>
+          {isOpen ? <ChevronUp className="w-4 h-4 text-fuchsia-400" /> : <ChevronDown className="w-4 h-4 text-fuchsia-400" />}
         </div>
       </button>
 
       {/* Expanded view */}
       {isOpen && (
-        <div className="p-5 border-t border-slate-800/80 bg-obsidian-950/70 space-y-4 font-mono text-xs">
+        <div className="p-5 border-t border-purple-500/20 bg-obsidian-950/80 space-y-4 font-mono text-xs">
           {/* Remote Endpoint Info */}
-          <div className="p-3 rounded-xl bg-obsidian-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="p-3.5 rounded-2xl bg-obsidian-900/90 border border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <span className="text-slate-400 text-[11px]">Streamable HTTP Remote Endpoint:</span>
-              <div className="text-alexa-cyan font-bold text-xs mt-0.5">
-                POST http://localhost:3001/mcp
+              <span className="text-purple-300/70 text-[11px]">Endpoint:</span>
+              <div className="text-fuchsia-400 font-bold text-xs mt-0.5">
+                POST /mcp
               </div>
             </div>
             <button
               onClick={handleCopyEndpoint}
-              className="px-2.5 py-1 rounded bg-obsidian-800 hover:bg-obsidian-700 text-slate-300 hover:text-white flex items-center gap-1 text-[11px] border border-slate-700 self-start sm:self-center"
+              className="px-3 py-1 rounded-full bg-obsidian-850 hover:bg-purple-950/40 text-purple-200 hover:text-white flex items-center gap-1.5 text-[11px] border border-purple-500/30 self-start sm:self-center transition-all shadow-sm"
             >
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              <span>{copied ? 'Copied' : 'Copy URL'}</span>
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
           {/* Registered Tools grid */}
           <div>
-            <div className="text-[11px] text-slate-400 font-semibold mb-2 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-alexa-purple" />
-              Registered MCP Tools:
+            <div className="text-[11px] text-purple-200/80 font-semibold mb-2 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-fuchsia-400" />
+              Tools:
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
               {registeredTools.map((t) => (
                 <button
                   key={t.name}
                   onClick={() => setSelectedTool(t)}
-                  className={`p-2 rounded-lg text-left border text-[11px] truncate transition-all ${
+                  className={`p-2 rounded-xl text-left border text-[11px] truncate transition-all ${
                     selectedTool?.name === t.name
-                      ? 'bg-alexa-purple/20 border-alexa-purple text-white shadow-sm'
-                      : 'bg-obsidian-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                      ? 'bg-fuchsia-500/25 border-fuchsia-400 text-white'
+                      : 'bg-obsidian-900 border-purple-500/20 text-purple-200 hover:border-purple-400/50'
                   }`}
                 >
                   <div className="font-bold truncate">{t.name}</div>
-                  <div className="text-[10px] text-slate-500 truncate">tool</div>
                 </button>
               ))}
             </div>
@@ -97,15 +95,14 @@ export const McpStreamableInspector: React.FC<McpStreamableInspectorProps> = ({
 
           {/* Tool schema viewer */}
           {selectedTool && (
-            <div className="p-3 rounded-xl bg-obsidian-900 border border-slate-800">
+            <div className="p-3.5 rounded-2xl bg-obsidian-900 border border-purple-500/30">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-alexa-cyan">Tool Schema: {selectedTool.name}</span>
-                <button onClick={() => setSelectedTool(null)} className="text-slate-500 hover:text-slate-300">
+                <span className="font-bold text-fuchsia-300">Schema: {selectedTool.name}</span>
+                <button onClick={() => setSelectedTool(null)} className="text-purple-300 hover:text-white">
                   ×
                 </button>
               </div>
-              <p className="text-[11px] text-slate-300 mb-2 font-sans">{selectedTool.description}</p>
-              <pre className="p-2 rounded bg-obsidian-950 text-[10px] text-slate-400 overflow-x-auto max-h-48 overflow-y-auto">
+              <pre className="p-2.5 rounded-xl bg-obsidian-950 text-[10px] text-purple-200/90 overflow-x-auto max-h-40 overflow-y-auto border border-purple-500/20">
                 {JSON.stringify(selectedTool.inputSchema, null, 2)}
               </pre>
             </div>
@@ -113,24 +110,24 @@ export const McpStreamableInspector: React.FC<McpStreamableInspectorProps> = ({
 
           {/* Real-time execution logs */}
           <div>
-            <div className="text-[11px] text-slate-400 font-semibold mb-2 flex items-center gap-1.5">
-              <Terminal className="w-3.5 h-3.5 text-alexa-cyan" />
-              Live Streamable HTTP Activity:
+            <div className="text-[11px] text-purple-200/80 font-semibold mb-2 flex items-center gap-1.5">
+              <Terminal className="w-3.5 h-3.5 text-fuchsia-400" />
+              Live Activity:
             </div>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto p-2 rounded-xl bg-obsidian-900 border border-slate-800">
+            <div className="space-y-1.5 max-h-40 overflow-y-auto p-2.5 rounded-2xl bg-obsidian-900 border border-purple-500/20">
               {logs.length === 0 ? (
-                <div className="text-[11px] text-slate-500 p-2">
-                  Awaiting calls... Use the Alexa Voice bar or click "Test Reschedule" to trigger protocol events.
+                <div className="text-[11px] text-purple-300/50 p-2">
+                  Awaiting tool execution...
                 </div>
               ) : (
                 logs.map((log) => (
                   <div
                     key={log.id}
-                    className="p-1.5 rounded bg-obsidian-950 text-[10px] text-slate-300 flex items-start gap-2"
+                    className="p-1.5 rounded-xl bg-obsidian-950 text-[10px] text-purple-200/90 flex items-start gap-2 border border-purple-500/10"
                   >
-                    <span className="text-slate-500">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                    <span className="text-purple-400/60">{new Date(log.timestamp).toLocaleTimeString()}</span>
                     <span className="text-emerald-400 font-bold">{log.toolName ? `${log.toolName}()` : log.type}</span>
-                    <span className="text-slate-400 truncate">{JSON.stringify(log.payload)}</span>
+                    <span className="text-purple-200/70 truncate">{JSON.stringify(log.payload)}</span>
                   </div>
                 ))
               )}

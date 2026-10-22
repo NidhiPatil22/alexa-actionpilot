@@ -44,68 +44,73 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-lg glass-panel rounded-2xl p-6 border border-slate-700 shadow-2xl relative font-mono text-xs">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <Brain className="w-4 h-4 text-alexa-cyan" />
-            Contextual Memory & Learned Habits
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="w-full max-w-lg rounded-3xl p-6 sm:p-7 border border-purple-500/30 bg-gradient-to-b from-obsidian-850/95 via-obsidian-900/95 to-obsidian-950/98 shadow-glass relative backdrop-blur-2xl font-mono text-xs">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-base font-bold text-white flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-fuchsia-500 flex items-center justify-center text-white">
+              <Brain className="w-4 h-4" />
+            </div>
+            <span>Contextual Memory & Learned Habits</span>
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-obsidian-850 border border-purple-500/20 text-purple-300 hover:text-white flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-slate-300 mb-1">Active North-Star Goal</label>
+            <label className="block text-purple-200/90 mb-1.5 font-sans font-medium">Active North-Star Goal</label>
             <input
               type="text"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              className="w-full bg-obsidian-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-alexa-purple"
+              className="w-full bg-obsidian-950/90 border border-purple-500/25 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-purple-300/40 focus:outline-none focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400/40"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-obsidian-950 border border-slate-800">
+          <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-obsidian-950/90 border border-purple-500/20">
             <div>
-              <span className="text-slate-500 block text-[11px]">Peak Focus Hours:</span>
-              <span className="text-slate-200 font-bold">
+              <span className="text-purple-300/70 block text-[11px]">Peak Focus Hours:</span>
+              <span className="text-white font-bold text-xs">
                 {context.peakFocusHours.start} - {context.peakFocusHours.end}
               </span>
             </div>
             <div>
-              <span className="text-slate-500 block text-[11px]">Workday Window:</span>
-              <span className="text-slate-200 font-bold">
+              <span className="text-purple-300/70 block text-[11px]">Workday Window:</span>
+              <span className="text-white font-bold text-xs">
                 {context.workHours.start} - {context.workHours.end}
               </span>
             </div>
           </div>
 
-          <div className="space-y-2.5 pt-1">
-            <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+          <div className="space-y-3 pt-1">
+            <label className="flex items-center gap-2.5 text-purple-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={preferMorningDeepWork}
                 onChange={(e) => setPreferMorningDeepWork(e.target.checked)}
-                className="rounded bg-obsidian-950 border-slate-700 text-alexa-purple focus:ring-0"
+                className="w-4 h-4 rounded bg-obsidian-950 border-purple-500/40 text-fuchsia-500 focus:ring-0"
               />
-              <span>Prioritize Deep Work during morning peak energy</span>
+              <span className="font-sans text-xs">Prioritize Deep Work during morning peak energy</span>
             </label>
 
-            <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+            <label className="flex items-center gap-2.5 text-purple-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={avoidConsecutiveMeetings}
                 onChange={(e) => setAvoidConsecutiveMeetings(e.target.checked)}
-                className="rounded bg-obsidian-950 border-slate-700 text-alexa-purple focus:ring-0"
+                className="w-4 h-4 rounded bg-obsidian-950 border-purple-500/40 text-fuchsia-500 focus:ring-0"
               />
-              <span>Enforce 15-minute buffers between calendar blocks</span>
+              <span className="font-sans text-xs">Enforce 15-minute buffers between calendar blocks</span>
             </label>
           </div>
 
           <div>
-            <label className="block text-slate-300 mb-1">
+            <label className="block text-purple-200/90 mb-1.5 font-sans font-medium">
               Minimum cushion before major deadlines (hours):
             </label>
             <input
@@ -114,28 +119,28 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
               max="24"
               value={cushionHours}
               onChange={(e) => setCushionHours(Number(e.target.value))}
-              className="w-full bg-obsidian-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-alexa-purple"
+              className="w-full bg-obsidian-950/90 border border-purple-500/25 rounded-2xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-400"
             />
           </div>
 
           {savedNotice && (
-            <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800 text-emerald-300 flex items-center gap-2">
+            <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 flex items-center gap-2">
               <Check className="w-4 h-4" />
               <span>Context preferences updated in memory store & AgentCore!</span>
             </div>
           )}
 
-          <div className="pt-2 flex justify-end gap-2">
+          <div className="pt-3 flex justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-obsidian-900 border border-slate-700"
+              className="px-4 py-2 rounded-full text-purple-300 hover:text-white bg-obsidian-850 border border-purple-500/20 transition-colors"
             >
               Close
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-alexa-indigo hover:bg-alexa-purple text-white font-bold transition-all"
+              className="px-5 py-2 rounded-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold transition-all shadow-glow-purple border border-fuchsia-400/30"
             >
               Save Preferences
             </button>

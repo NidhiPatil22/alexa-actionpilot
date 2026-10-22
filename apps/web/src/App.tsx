@@ -271,7 +271,12 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-obsidian-950 text-slate-100 flex flex-col font-sans relative selection:bg-alexa-magenta/80 selection:text-white">
+      {/* Atmospheric ambient lighting layers */}
+      <div className="fixed top-0 left-1/4 -translate-x-1/2 w-[700px] h-[500px] bg-purple-900/15 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-fuchsia-950/15 rounded-full blur-[160px] pointer-events-none -z-10"></div>
+      <div className="fixed bottom-0 left-1/3 w-[800px] h-[400px] bg-violet-950/20 rounded-full blur-[150px] pointer-events-none -z-10"></div>
+
       <Header
         onReset={handleResetDemo}
         onOpenNewTask={() => setIsNewTaskOpen(true)}
@@ -279,8 +284,8 @@ export const App: React.FC = () => {
         isResetting={isResetting}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6">
-        {/* Alexa Conversational Voice Simulation Bar */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8">
+        {/* Alexa Conversational Voice Simulation Bar (Flagship Centerpiece) */}
         <AlexaVoiceBar
           onSendQuery={handleAlexaQuery}
           isLoading={isLoading}
@@ -304,7 +309,7 @@ export const App: React.FC = () => {
         />
 
         {/* Schedule & Workload Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
           <div className="lg:col-span-7">
             <CalendarTimeline events={events} />
           </div>
@@ -345,17 +350,16 @@ export const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-800/80 py-6 px-4 lg:px-8 text-center text-xs font-mono text-slate-500 bg-obsidian-950/80">
+      <footer className="w-full border-t border-purple-500/10 py-6 px-4 lg:px-8 text-center text-xs font-mono text-purple-300/50 bg-obsidian-950/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div>
-            ActionPilot • The Next-Best-Action Engine for Alexa+ • Amazon Developer Hackathon 2026
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400"></span>
+            <span>ActionPilot • Alexa+ MCP</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span>Remote MCP 2025-11-25</span>
+          <div className="flex items-center gap-3 text-purple-300/40 text-[11px]">
+            <span>MCP 2025-11-25</span>
             <span>•</span>
-            <span>Amazon Bedrock</span>
-            <span>•</span>
-            <span>Streamable HTTP</span>
+            <span>Bedrock Agent</span>
           </div>
         </div>
       </footer>
